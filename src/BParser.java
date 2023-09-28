@@ -11,13 +11,14 @@ public class BParser {
     private static String clipboardPast = null;
 
     public static void main(String[] args) {
+        Utils.introduce();
+
         Timer timer = new Timer();
 
         TimerTask regularTask = new TimerTask() {
             @Override
             public void run() {
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-
                 try {
                     Transferable contents = clipboard.getContents(null);
                     if (contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor) &&

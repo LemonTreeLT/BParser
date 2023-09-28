@@ -28,7 +28,6 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-.log/
-.idea/
-.temp/
-
+/.idea
+/log
+/temp

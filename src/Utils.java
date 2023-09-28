@@ -81,6 +81,17 @@ public class Utils {
         }
     }
 
+    /**
+     * 这是为这个项目添加的介绍,不建议复制
+     */
+    public static void introduce() {
+        System.out.println("================================================================");
+        System.out.println(Constant.Introduce_BParser);
+        System.out.println("                                     \u001B[3mby LemonTree");
+        System.out.println("                 开始监听");
+        System.out.println("================================================================");
+    }
+
     public static String getVideoInfo(String url) {
         if (!isValidURL(url)) {
             logger.Info("非bilibili视频url");
