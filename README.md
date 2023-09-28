@@ -1,7 +1,10 @@
 # bilibili视频自动解析
 效果如下：
 
-复制：https://www.bilibili.com/video/BV1WH4y1m7qM/?spm_id_from=444.41.list.card_archive.click"
+复制:  
+```
+https://www.bilibili.com/video/BV1WH4y1m7qM/?spm_id_from=444.41.list.card_archive.
+```
 
 粘贴:
 ```
@@ -33,13 +36,15 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 ## ToDoList
 Gui版本(可能?  
 添加其他平台的解析(几乎不可能  
-解决这个sb的Exception "java.lang.ClassNotFoundException:报错(马上！！！！ --> 莫名奇妙自己好了  
-又报了^^  
+解决这个sb的`Exception java.lang.ClassNotFoundException`报错(马上！！！！ --> 莫名奇妙自己好了  
+又报了^^  --> 好了   
 图片复制(10月初  
+多线程(看心情  
 添加config.json(会做但不定时  
+logger单独做成一个模块(可能?  
+logger的config(不久  
 anymore idk...
 
 ## 闲聊
 项目有问题可以提一个issue，在上面大声说出你的问题  
-图片复制我实在研究不明白啊，有没有大佬可以发一个issue救救我QAQ  
 作者大脑发育不完全，小脑完全不发育，没必要跟我急

@@ -6,4 +6,12 @@ public interface Constant {
     int ALLOW_ERROR = 10;
     Pattern BvPattern = Pattern.compile("BV(\\w+)(?=/|$)");
     Pattern StringPattern = Pattern.compile("/([A-Za-z0-9]+)/\\?");
+    String Introduce_BParser = """
+               ___      ___                                         \s
+              | _ )    | _ \\  __ _      _ _    ___     ___      _ _ \s
+              | _ \\    |  _/ / _` |    | '_|  (_-<    / -_)    | '_|\s
+              |___/   _|_|_  \\__,_|   _|_|_   /__/_   \\___|   _|_|_ \s
+            _|""\"""|_| ""\" |_|""\"""|_|""\"""|_|""\"""|_|""\"""|_|""\"""|\s
+            "`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'
+            """;
 }
