@@ -2,6 +2,7 @@ import com.alibaba.fastjson2.JSONObject;
 
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 
@@ -9,6 +10,7 @@ public class Utils {
 
     private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final Logger logger = BParser.logger;
+
     public static String Search(String url) {
         Matcher matcher = Constant.StringPattern.matcher(url);
         if(!matcher.find()) return null;
@@ -85,18 +87,18 @@ public class Utils {
      * 这是为这个项目添加的介绍,不建议复制
      */
     public static void introduce() {
-        System.out.println("================================================================");
-        System.out.println(Constant.Introduce_BParser);
+        System.out.println(Constant.IntroduceBParser);
         System.out.println("                                     \u001B[3mby LemonTree");
-        System.out.println("                 开始监听");
         System.out.println("================================================================");
     }
 
+    public static String ByteToUtf8(String str) {
+        byte[] utf8Bytes = str.getBytes(StandardCharsets.UTF_8);
+        return new String(utf8Bytes, StandardCharsets.UTF_8);
+    }
+
     public static String getVideoInfo(String url) {
-        if (!isValidURL(url)) {
-            logger.Info("非bilibili视频url");
-            return null;
-        }
+        if (!isValidURL(url)) return null;
 
         logger.Info("获取链接 " + url.replaceAll("/n", ""));
         String bvid = Utils.Search(url);
@@ -126,7 +128,9 @@ public class Utils {
         JSONObject BVData = JSONObject.parseObject(jsonObject.get("data").toString());
         JSONObject VideoStat = JSONObject.parseObject(BVData.get("stat").toString());
 
-        logger.Info("已获取视频信息: " + BVData.get("title"));
+        String VideoTitle = ByteToUtf8((String) BVData.get("title"));
+
+        logger.Info("已获取视频信息: " + VideoTitle);
 
         String PicUrl = BVData.get("pic").toString();
         if(PicUrl == null) logger.Warn("无法获取图片链接");
@@ -152,9 +156,9 @@ public class Utils {
                 点赞数: %s
                 https://www.bilibili.com/video/%s
                 """,
-                "{image.getdata()}", BVData.get("title"),
+                "{image.getdata()}", VideoTitle,
                 format.format((long) (int) BVData.get("pubdate") * 1000),
-                JSONObject.parseObject(BVData.get("owner").toString()).get("name"),
+                ByteToUtf8((String) JSONObject.parseObject(BVData.get("owner").toString()).get("name")),
                 VideoStat.get("reply"), VideoStat.get("favorite"), VideoStat.get("coin"),
                 VideoStat.get("like"), bvid
         );

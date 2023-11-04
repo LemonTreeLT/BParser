@@ -26,7 +26,8 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 之前使用python写的,脑抽了用java写了一遍
 
 ## BUG
-复制intellij的文字会报错，不影响运行
+复制intellij的文字会报错，不影响运行  
+构建后的jar中文会乱码 解决方法：自己构建
 
 ## 使用
 下载Releases中的jar或者exe文件  
@@ -34,16 +35,12 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 **exe:**  确保你是windows环境，直接运行
 
 ## ToDoList
-Gui版本(可能?  
-添加其他平台的解析(几乎不可能  
-解决这个sb的`Exception java.lang.ClassNotFoundException`报错(马上！！！！ --> 莫名奇妙自己好了  
-又报了^^  --> 好了   
-图片复制(10月初  
-多线程(看心情  
-添加config.json(会做但不定时  
-logger单独做成一个模块(可能?  
-logger的config(不久  
-anymore idk...
+- [ ] Gui版本(可能?  
+- [ ] 添加其他平台的解析(几乎不可能
+- [ ] 图片复制(10月初  
+- [ ] 多线程(看心情  
+- [ ] 添加config.json(会做但不定时
+- anymore idk...
 
 ## 闲聊
 项目有问题可以提一个issue，在上面大声说出你的问题  
