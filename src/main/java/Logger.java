@@ -1,4 +1,3 @@
-import java.io.File;
 import java.text.SimpleDateFormat;
 
 @SuppressWarnings("unused")
@@ -6,18 +5,14 @@ public class Logger {
     public enum LoggerLevel {
         ALL, DEBUG, ERROR, WARN, INFO
     }
+
     SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
     private String Level;
     private String Prefix;
-    private static final String LOG_DIR = ".\\log";
 
     public Logger(LoggerLevel LoggerLevel, String prefix) {
         Level = String.valueOf(LoggerLevel);
         this.Prefix = prefix;
-        File file = new File(LOG_DIR);
-        if (!file.exists()) if(!file.mkdir()) {
-            System.out.println(Prefix("Error", getColorForLevel("error")) + "Can't creat log directory");
-        }
     }
 
     public Logger(LoggerLevel loggerLevel) {
@@ -42,17 +37,17 @@ public class Logger {
     }
 
     public void Warn(String msg) {
-        if (Level.equals(String.valueOf(LoggerLevel.ERROR))) return;
+        if(Level.equals(String.valueOf(LoggerLevel.ERROR))) return;
         System.out.println(Prefix("WARN", getColorForLevel("warn")) + msg);
     }
 
     public void Info(String msg) {
-        if (!Level.equals(String.valueOf(LoggerLevel.ALL)) && !Level.equals(String.valueOf(LoggerLevel.INFO))) return;
+        if(!Level.equals(String.valueOf(LoggerLevel.ALL)) && !Level.equals(String.valueOf(LoggerLevel.INFO))) return;
         System.out.println(Prefix("INFO", getColorForLevel("info")) + msg);
     }
 
     public void Debug(String msg) {
-        if (!Level.equals(String.valueOf(LoggerLevel.DEBUG)) && !Level.equals(String.valueOf(LoggerLevel.ALL))) return;
+        if(!Level.equals(String.valueOf(LoggerLevel.DEBUG)) && !Level.equals(String.valueOf(LoggerLevel.ALL))) return;
         System.out.println(Prefix("DEBUG", getColorForLevel("debug")) + msg);
     }
 
@@ -65,7 +60,7 @@ public class Logger {
         String PrefixLevel = PrefixTime + ConsoleColor.RESET + ConsoleColor.WHITE +
                 "[" + ConsoleFont.BOLD + color + msg + ConsoleColor.RESET + ConsoleColor.WHITE + "] " + ConsoleColor.RESET;
 
-        if (Prefix == null) return PrefixLevel;
+        if(Prefix == null) return PrefixLevel;
         return ConsoleColor.WHITE + "[" + ConsoleColor.MAGENTA + this.Prefix + ConsoleColor.WHITE + "]" + PrefixLevel;
     }
 
@@ -77,6 +72,7 @@ public class Logger {
             default -> ConsoleColor.RESET;
         };
     }
+
     @SuppressWarnings("unused")
     private interface ConsoleColor {
         // 文字颜色

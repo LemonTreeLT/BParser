@@ -21,7 +21,7 @@ public class BParserOnTerminal {
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 try {
                     Transferable contents = clipboard.getContents(null);
-                    if (contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor) &&
+                    if(contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor) &&
                             !Objects.equals(clipboardPast, contents.getTransferData(DataFlavor.stringFlavor))) {
 
                         String copiedText = (String) contents.getTransferData(DataFlavor.stringFlavor);
@@ -32,7 +32,7 @@ public class BParserOnTerminal {
                         clipboardPast = (String) contents.getTransferData(DataFlavor.stringFlavor);
 
                     }
-                } catch (IOException | UnsupportedFlavorException e) {
+                } catch(IOException | UnsupportedFlavorException e) {
                     logger.Error("发生未知错误: " + e.getMessage());
                 }
             }

@@ -23,15 +23,16 @@ public class Utils {
         else {
             String bvid = matcher.group();
             Matcher BvID = Constant.BvPattern.matcher(bvid);
-            if (!BvID.find()) return null;
+            if(!BvID.find()) return null;
             return BvID.group();
         }
     }
 
     /**
      * api请求器
+     *
      * @param urlString Api链接
-     * @param videoID 视频链接
+     * @param videoID   视频链接
      * @return 视频信息
      * @throws IOException 文件系统错误
      */
@@ -59,31 +60,6 @@ public class Utils {
     }
 
     /**
-     * 字节流下载器
-     * @param httpUrl 请求的网络链接
-     * @param dir 下载目录
-     * @param fileName 下载的文件名字
-     * @return 成功与否
-     * @throws IOException 文件系统错误
-     */
-    public boolean DownlandFile(String httpUrl, String dir, String fileName, String suffix) throws IOException {
-        File ImageDir = new File(dir);
-        URL url = new URL(httpUrl);
-        URLConnection conn = url.openConnection();
-
-        int byteRead;
-        if (!ImageDir.exists()) if (!ImageDir.mkdir()) return false;
-
-        InputStream inStream = conn.getInputStream();
-        try(FileOutputStream fs = new FileOutputStream((dir + "\\" + fileName + "." + suffix))) {
-            byte[] buffer = new byte[1204];
-
-            while((byteRead = inStream.read(buffer)) != -1) fs.write(buffer, 0, byteRead);
-        }
-        return true;
-    }
-
-    /**
      * 这是为这个项目添加的介绍,不建议复制
      */
     public void introduce() {
@@ -98,16 +74,16 @@ public class Utils {
             byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
 
             StringBuilder hexString = new StringBuilder();
-            for (byte hashByte : hashBytes) {
+            for(byte hashByte : hashBytes) {
                 String hex = Integer.toHexString(0xff & hashByte);
-                if (hex.length() == 1) {
+                if(hex.length() == 1) {
                     hexString.append('0');
                 }
                 hexString.append(hex);
             }
 
             return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
+        } catch(NoSuchAlgorithmException e) {
             logger.Error("发生错误: " + e);
             return "Error";
         }
@@ -126,16 +102,16 @@ public class Utils {
 
     public String getVideoInfo(String url) {
         logger.Info("获取剪切板 | S:" + url.length() + " | " + strToSHA256(url));
-        String bvid = Search(url, Constant.StringPattern);
-        if(bvid == null) return null;
-        else logger.Info("解析到BvId: " + bvid);
+        String bvId = Search(url, Constant.StringPattern);
+        if(bvId == null) return null;
+        else logger.Info("解析到BvId: " + bvId);
 
-        logger.Info("发送请求: " + Constant.ApiUrl + bvid);
+        logger.Info("发送请求: " + Constant.ApiUrl + bvId);
 
         long startTime = System.currentTimeMillis();
         JSONObject jsonObject;
         try {
-            jsonObject = request(Constant.ApiUrl, bvid);
+            jsonObject = request(Constant.ApiUrl, bvId);
         } catch(IOException e) {
             logger.Error("Api请求失败,请检查你的网络链接 错误位于: " + e);
             return null;
@@ -157,32 +133,25 @@ public class Utils {
         String PicUrl = BVData.get("pic").toString();
         if(PicUrl == null) logger.Warn("无法获取图片链接");
         else logger.Info("获取图片链接: " + PicUrl);
-
-        try {
-            if(DownlandFile(PicUrl, Constant.DEFAULT_TEMP_FILE_DIR, bvid, "jpg")) logger.Info("成功获取图片");
-            else logger.Error("未知错误,无法获取图片,请检查你的网络连接");
-        } catch(Exception e) {
-            logger.Error("致命错误,位于: " + e);
-            return null;
-        }
+        logger.Info("停止获取图片");
 
         return String.format(
                 """
-                %s #芝士图片
-                %s
-                发布时间: %s
-                up: %s
-                评论数: %s
-                收藏数: %s
-                硬币数: %s
-                点赞数: %s
-                https://www.bilibili.com/video/%s
-                """,
-                "{image.getdata()}", VideoTitle,
+                        %s #芝士图片
+                        %s
+                        发布时间: %s
+                        up: %s
+                        评论数: %s
+                        收藏数: %s
+                        硬币数: %s
+                        点赞数: %s
+                        https://www.bilibili.com/video/%s
+                        """,
+                "NoPIC", VideoTitle,
                 format.format((long) (int) BVData.get("pubdate") * 1000),
                 ByteToUtf8((String) JSONObject.parseObject(BVData.get("owner").toString()).get("name")),
                 VideoStat.get("reply"), VideoStat.get("favorite"), VideoStat.get("coin"),
-                VideoStat.get("like"), bvid
+                VideoStat.get("like"), bvId
         );
     }
 }
