@@ -27,7 +27,7 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 
 ## BUG
 复制intellij的文字会报错，不影响运行  
-构建后的jar中文会乱码 解决方法：自己构建
+构建后的jar中文会乱码 解决方法：使用 `java -Dfile.encoding=UTF-8 -jar BParser.jar`运行
 
 ## 使用
 下载Releases中的jar或者exe文件  
@@ -40,6 +40,7 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 - [ ] 图片复制(10月初  
 - [ ] 多线程(看心情  
 - [ ] 添加config.json(会做但不定时
+- [ ] 在img查找已有图像的功能
 - anymore idk...
 
 ## 闲聊

@@ -3,16 +3,22 @@ import com.alibaba.fastjson2.JSONObject;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Utils {
+    private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final Logger logger;
 
-    private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private static final Logger logger = BParser.logger;
+    public Utils(Logger logger) {
+        this.logger = logger;
+    }
 
-    public static String Search(String url) {
-        Matcher matcher = Constant.StringPattern.matcher(url);
+    public String Search(String url, Pattern pattern) {
+        Matcher matcher = pattern.matcher(url);
         if(!matcher.find()) return null;
         else {
             String bvid = matcher.group();
@@ -22,7 +28,7 @@ public class Utils {
         }
     }
 
-    public static JSONObject request(String urlString, String videoID) throws IOException {
+    public JSONObject request(String urlString, String videoID) throws IOException {
         URL url = new URL(urlString + videoID);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
@@ -57,7 +63,7 @@ public class Utils {
      * @return 成功与否
      * @throws IOException 正常报错
      */
-    public static boolean DownlandFile(String httpUrl, String dir, String fileName) throws IOException {
+    public boolean DownlandFile(String httpUrl, String dir, String fileName) throws IOException {
         File ImageDir = new File(dir);
         URL url = new URL(httpUrl);
         URLConnection conn = url.openConnection();
@@ -74,47 +80,64 @@ public class Utils {
         return true;
     }
 
-    public static boolean isValidURL(String text) {
-        try {
-            new URL(text);
-            return true;
-        } catch (MalformedURLException e) {
-            return false;
-        }
-    }
-
     /**
      * 这是为这个项目添加的介绍,不建议复制
      */
-    public static void introduce() {
+    public void introduce() {
         System.out.println(Constant.IntroduceBParser);
-        System.out.println("                                     \u001B[3mby LemonTree");
+        System.out.println("                                     \u001B[3mby LemonTree\u001B[0m");
         System.out.println("================================================================");
     }
 
-    public static String ByteToUtf8(String str) {
-        byte[] utf8Bytes = str.getBytes(StandardCharsets.UTF_8);
-        return new String(utf8Bytes, StandardCharsets.UTF_8);
+    public String compressToFixedLength(String input) {
+        try {
+            // 使用 SHA-256 哈希函数
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            // 将输入数据转换为字节数组并更新哈希对象
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+
+            // 将字节数组转换为十六进制字符串
+            StringBuilder hexString = new StringBuilder();
+            for (byte hashByte : hashBytes) {
+                String hex = Integer.toHexString(0xff & hashByte);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            logger.Error("发生错误: " + e.getMessage());
+            return "Error";
+        }
     }
 
-    public static String getVideoInfo(String url) {
-        if (!isValidURL(url)) return null;
+    public String ByteToUtf8(String str) {
+        String text;
+        try {
+            byte[] utf8Bytes = str.getBytes("GBK");
+            text = new String(utf8Bytes, "GBK");
+        } catch(UnsupportedEncodingException ignored) {
+            text = str;
+        }
+        return text;
+    }
 
-        logger.Info("获取链接 " + url.replaceAll("/n", ""));
-        String bvid = Utils.Search(url);
-        if(bvid == null) {
-            logger.Warn("无法解析到BvId");
-            return null;
-        } else logger.Info("解析到BvId: " + bvid);
+    public String getVideoInfo(String url) {
+        logger.Info("获取剪切板 | S:" + url.length() + " | " + compressToFixedLength(url));
+        String bvid = Search(url, Constant.StringPattern);
+        if(bvid == null) return null;
+        else logger.Info("解析到BvId: " + bvid);
 
         logger.Info("发送请求: " + Constant.ApiUrl + bvid);
 
         long startTime = System.currentTimeMillis();
         JSONObject jsonObject;
         try {
-            jsonObject = Utils.request(Constant.ApiUrl, bvid);
+            jsonObject = request(Constant.ApiUrl, bvid);
         } catch(IOException e) {
-
             return null;
         }
         long endTime = System.currentTimeMillis();

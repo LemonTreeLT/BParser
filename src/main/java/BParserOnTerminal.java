@@ -5,13 +5,13 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class BParser {
+public class BParserOnTerminal {
     public static final Logger logger = new Logger(Logger.LoggerLevel.ALL, "BParser");
-    private static int errorCount = 0;
     private static String clipboardPast = null;
+    private static final Utils utils = new Utils(logger);
 
     public static void main(String[] args) {
-        Utils.introduce();
+        utils.introduce();
 
         Timer timer = new Timer();
 
@@ -25,21 +25,15 @@ public class BParser {
                             !Objects.equals(clipboardPast, contents.getTransferData(DataFlavor.stringFlavor))) {
 
                         String copiedText = (String) contents.getTransferData(DataFlavor.stringFlavor);
-                        String parserText = Utils.getVideoInfo(copiedText);
+                        String parserText = utils.getVideoInfo(copiedText);
 
                         if(parserText != null) clipboard.setContents(new StringSelection(parserText), null);
                         contents = clipboard.getContents(null);
                         clipboardPast = (String) contents.getTransferData(DataFlavor.stringFlavor);
 
                     }
-                } catch (UnsupportedFlavorException | IOException e) {
-                    errorCount ++;
+                } catch (IOException | UnsupportedFlavorException e) {
                     logger.Error("发生未知错误: " + e.getMessage());
-                    if (Constant.ALLOW_ERROR - errorCount > 0) {
-                        logger.Warn("再发生 " + (Constant.ALLOW_ERROR - errorCount) + " 次程序将强行停止");
-                    } else {
-                        logger.Info("报错过多,程序停止");
-                    }
                 }
             }
         };
