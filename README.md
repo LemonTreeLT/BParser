@@ -18,7 +18,7 @@ up: IronMilk_铁牛奶
 点赞数: 2557  
 https://www.bilibili.com/video/BV1WH4y1m7qM
 ```
-> 关于复制图片的部分我没有实现，预计会在10月初实现
+> 关于复制图片的部分我没有实现，~~*在做了*~~
 
 
 ## 关于
@@ -40,7 +40,6 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 - [ ] 图片复制(10月初  
 - [ ] 多线程(看心情  
 - [ ] 添加config.json(会做但不定时
-- [ ] 在img查找已有图像的功能
 - anymore idk...
 
 ## 闲聊
