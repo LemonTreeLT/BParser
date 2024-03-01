@@ -9,8 +9,8 @@ public class BParser {
         else mode = Mode.Terminal;
 
         switch(mode) {
-            case Tray -> BParserWithTray.main(new String[] {});
-            case Terminal -> BParserOnTerminal.main(new String[] {});
+            case Tray -> BParserWithTray.run();
+            case Terminal -> BParserOnTerminal.run();
         }
     }
 }

@@ -29,7 +29,8 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 
 ## BUG
 复制intellij的文字会报错，不影响运行  
-构建后的jar中文会乱码 解决方法：使用 `java -Dfile.encoding=UTF-8 -jar BParser.jar`运行
+构建后的jar中文会乱码 解决方法：使用 `java -Dfile.encoding=UTF-8 -jar BParser.jar`运行  
+如果在powershell使用这个命令报错，请使用cmd运行
 
 ## 使用
 下载Releases中的jar或者exe文件  

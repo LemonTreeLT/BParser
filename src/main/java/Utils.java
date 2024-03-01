@@ -39,6 +39,7 @@ public class Utils {
     public JSONObject request(String urlString, String videoID) throws IOException {
         URL url = new URL(urlString + videoID);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestProperty("Charset", "UTF-8");
         connection.setRequestMethod("GET");
 
         int responseCode = connection.getResponseCode();
@@ -89,17 +90,6 @@ public class Utils {
         }
     }
 
-    public String ByteToUtf8(String str) {
-        String text;
-        try {
-            byte[] utf8Bytes = str.getBytes("GBK");
-            text = new String(utf8Bytes, "GBK");
-        } catch(UnsupportedEncodingException ignored) {
-            text = str;
-        }
-        return text;
-    }
-
     public String getVideoInfo(String url) {
         logger.Info("获取剪切板 | S:" + url.length() + " | " + strToSHA256(url));
         String bvId = Search(url, Constant.StringPattern);
@@ -126,7 +116,7 @@ public class Utils {
 
         JSONObject BVData = JSONObject.parseObject(jsonObject.get("data").toString());
         JSONObject VideoStat = JSONObject.parseObject(BVData.get("stat").toString());
-        String VideoTitle = ByteToUtf8((String) BVData.get("title"));
+        String VideoTitle = (String) BVData.get("title");
 
         logger.Info("已获取视频信息: " + VideoTitle);
 
@@ -149,7 +139,7 @@ public class Utils {
                         """,
                 "NoPIC", VideoTitle,
                 format.format((long) (int) BVData.get("pubdate") * 1000),
-                ByteToUtf8((String) JSONObject.parseObject(BVData.get("owner").toString()).get("name")),
+                JSONObject.parseObject(BVData.get("owner").toString()).get("name"),
                 VideoStat.get("reply"), VideoStat.get("favorite"), VideoStat.get("coin"),
                 VideoStat.get("like"), bvId
         );
