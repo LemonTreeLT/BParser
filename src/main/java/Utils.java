@@ -1,8 +1,12 @@
 import com.alibaba.fastjson2.JSONObject;
 
+import java.awt.datatransfer.Transferable;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -69,6 +73,26 @@ public class Utils {
         System.out.println("================================================================");
     }
 
+    public String downloadFile(URL url) throws IOException {
+        String temp = System.getProperty("java.io.tmpdir");
+        Path bParserDirPath = Paths.get(temp, "BParser");
+        Files.createDirectories(bParserDirPath);
+
+        String fileName = url.getFile().substring(url.getFile().lastIndexOf('/') + 1);
+        Path targetFilePath = Paths.get(bParserDirPath.toString(), fileName);
+
+        try (InputStream in = new BufferedInputStream(url.openStream());
+             OutputStream out = new FileOutputStream(targetFilePath.toFile())) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+            out.flush();
+        }
+        return targetFilePath.toUri().toString();
+    }
+
     public String strToSHA256(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -90,7 +114,7 @@ public class Utils {
         }
     }
 
-    public String getVideoInfo(String url) {
+    public Transferable getVideoInfo(String url) throws IOException {
         logger.Info("获取剪切板 | S:" + url.length() + " | " + strToSHA256(url));
         String bvId = Search(url, Constant.StringPattern);
         if(bvId == null) return null;
@@ -122,26 +146,19 @@ public class Utils {
 
         String PicUrl = BVData.get("pic").toString();
         if(PicUrl == null) logger.Warn("无法获取图片链接");
-        else logger.Info("获取图片链接: " + PicUrl);
-        logger.Info("停止获取图片");
+        else {
+            logger.Info("获取图片链接: " + PicUrl);
+            PicUrl = downloadFile(new URL(PicUrl));
+        }
 
-        return String.format(
-                """
-                        %s #芝士图片
-                        %s
-                        发布时间: %s
-                        up: %s
-                        评论数: %s
-                        收藏数: %s
-                        硬币数: %s
-                        点赞数: %s
-                        https://www.bilibili.com/video/%s
-                        """,
-                "NoPIC", VideoTitle,
-                format.format((long) (int) BVData.get("pubdate") * 1000),
+        String wholeInfo =  String.format(
+                "%s<br>发布时间: %s<br>up: %s<br>评论数: %s<br>收藏数: %s<br>硬币数: %s<br>点赞数: %s<br>https://www.bilibili.com/video/%s ",
+                VideoTitle, format.format((long) (int) BVData.get("pubdate") * 1000),
                 JSONObject.parseObject(BVData.get("owner").toString()).get("name"),
                 VideoStat.get("reply"), VideoStat.get("favorite"), VideoStat.get("coin"),
                 VideoStat.get("like"), bvId
         );
+
+        return new FormatInfo(PicUrl, wholeInfo);
     }
 }

@@ -1,27 +1,26 @@
 # bilibili视频自动解析
-> 学业压力，暂时停更  
+> 喜报：本人成功了解到有一个东西叫做富文本并且成功实现图片复制  
+> 中考去了，暂停维护  
 
 效果如下：
 
 复制:  
 ```
-https://www.bilibili.com/video/BV1WH4y1m7qM/?spm_id_from=444.41.list.card_archive.
+https://www.bilibili.com/video/BV1tJ4m1L7Z3
 ```
 
 粘贴:
 ```
-{image.getdata()} #芝士图片  
-【Neuro/Saruei】联动回 英法友好交流  
-发布时间: 2023-09-22 15:29:11  
-up: IronMilk_铁牛奶  
-评论数: 113  
-收藏数: 591  
-硬币数: 334  
-点赞数: 2557  
-https://www.bilibili.com/video/BV1WH4y1m7qM
+[图像]
+用了个开源软件，电脑就被黑了？这手法有点妙！
+发布时间: 2024-03-29 18:30:00
+up: 码农高天
+评论数: 236
+收藏数: 579
+硬币数: 448
+点赞数: 2010
+https://www.bilibili.com/video/BV1tJ4m1L7Z3
 ```
-> 关于复制图片的部分我没有实现，~~*在做了*~~
-
 
 ## 关于
 自己瞎做的  
@@ -31,6 +30,7 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 复制intellij的文字会报错，不影响运行  
 构建后的jar中文会乱码 解决方法：使用 `java -Dfile.encoding=UTF-8 -jar BParser.jar`运行  
 如果在powershell使用这个命令报错，请使用cmd运行
+在某些只支持纯文本的编辑器下(如notepad)粘贴会出现一点HTML，以后修复 
 
 ## 使用
 下载Releases中的jar或者exe文件  
@@ -46,7 +46,5 @@ https://www.bilibili.com/video/BV1WH4y1m7qM
 ~~- anymore idk...~~  
 
 ## 闲聊
-项目有问题可以提一个issue，在上面大声说出你的问题  
-作者大脑发育不完全，小脑完全不发育，没必要跟我急  
-2024-2-12目前的版本可以正常使用，被图片复制整崩溃了
+项目有问题可以提一个issue，在上面大声说出你的问题
 

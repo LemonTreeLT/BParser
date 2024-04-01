@@ -29,10 +29,10 @@ public class BParserOnTerminal {
                         // 获取剪贴板中的文本
                         String copiedText = (String) contents.getTransferData(DataFlavor.stringFlavor);
                         // 解析文本
-                        String parserText = utils.getVideoInfo(copiedText);
+                        Transferable parserContent = utils.getVideoInfo(copiedText);
 
                         // 如果解析结果不为空，则将解析结果设置到剪贴板
-                        if(parserText != null) clipboard.setContents(new StringSelection(parserText), null);
+                        if(parserContent != null) clipboard.setContents(parserContent, null);
                         // 再次获取剪贴板内容
                         contents = clipboard.getContents(null);
                         // 更新上一次剪贴板内容
