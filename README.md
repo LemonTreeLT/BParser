@@ -29,7 +29,7 @@ https://www.bilibili.com/video/BV1tJ4m1L7Z3
 ## BUG
 复制intellij的文字会报错，不影响运行  
 构建后的jar中文会乱码 解决方法：使用 `java -Dfile.encoding=UTF-8 -jar BParser.jar`运行  
-如果在powershell使用这个命令报错，请使用cmd运行
+如果在powershell使用这个命令报错，请使用cmd运行  
 在某些只支持纯文本的编辑器下(如notepad)粘贴会出现一点HTML，以后修复 
 
 ## 使用
