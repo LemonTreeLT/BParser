@@ -3,10 +3,12 @@ import com.alibaba.fastjson2.JSONObject;
 import java.awt.datatransfer.Transferable;
 import java.io.*;
 import java.net.*;
+import java.net.http.HttpConnectTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.rmi.UnexpectedException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -59,9 +61,8 @@ public class Utils {
             connection.disconnect();
             return JSONObject.parseObject(apiData);
         }
-        logger.Debug(String.valueOf(responseCode));
         connection.disconnect();
-        throw new IOException();
+        throw new IOException("1");
     }
 
     /**
@@ -118,38 +119,26 @@ public class Utils {
         logger.Info("获取剪切板 | S:" + url.length() + " | " + strToSHA256(url));
         String bvId = Search(url, Constant.StringPattern);
         if(bvId == null) return null;
-        else logger.Info("解析到BvId: " + bvId);
-
-        logger.Info("发送请求: " + Constant.ApiUrl + bvId);
-
+        else logger.Video("解析到BvId: " + bvId);
         long startTime = System.currentTimeMillis();
+
         JSONObject jsonObject;
         try {
             jsonObject = request(Constant.ApiUrl, bvId);
         } catch(IOException e) {
-            logger.Error("Api请求失败,请检查你的网络链接 错误位于: " + e);
-            return null;
+            throw new IOException(e);
         }
-        long endTime = System.currentTimeMillis();
 
-        logger.Info("请求用时" + (endTime - startTime) + "ms");
-        if(jsonObject == null) {
-            logger.Error("Api请求失败,请检查你的网络链接");
-            return null;
-        }
+
+        if(jsonObject == null) throw new HttpConnectTimeoutException("2");
 
         JSONObject BVData = JSONObject.parseObject(jsonObject.get("data").toString());
         JSONObject VideoStat = JSONObject.parseObject(BVData.get("stat").toString());
         String VideoTitle = (String) BVData.get("title");
-
-        logger.Info("已获取视频信息: " + VideoTitle);
-
         String PicUrl = BVData.get("pic").toString();
+
         if(PicUrl == null) logger.Warn("无法获取图片链接");
-        else {
-            logger.Info("获取图片链接: " + PicUrl);
-            PicUrl = downloadFile(new URL(PicUrl));
-        }
+        else PicUrl = downloadFile(new URL(PicUrl));
 
         String wholeInfo =  String.format(
                 "%s<br>发布时间: %s<br>up: %s<br>评论数: %s<br>收藏数: %s<br>硬币数: %s<br>点赞数: %s<br>https://www.bilibili.com/video/%s ",
@@ -159,6 +148,12 @@ public class Utils {
                 VideoStat.get("like"), bvId
         );
 
-        return new FormatInfo(PicUrl, wholeInfo);
+        try {
+            Transferable vidInfo = new FormatInfo(PicUrl, wholeInfo);
+            logger.Video("构建视频信息成功, 用时: " + (System.currentTimeMillis() - startTime) + "ms");
+            return vidInfo;
+        } catch(Exception e) {
+            throw new UnexpectedException("构建视频信息失败, 用时: " + (System.currentTimeMillis() - startTime) + "ms", e);
+        }
     }
 }

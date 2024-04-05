@@ -3,7 +3,7 @@ import java.text.SimpleDateFormat;
 @SuppressWarnings("unused")
 public class Logger {
     public enum LoggerLevel {
-        ALL, DEBUG, ERROR, WARN, INFO
+        ALL, VIDEO, ERROR, WARN, INFO
     }
 
     SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
@@ -46,9 +46,9 @@ public class Logger {
         System.out.println(Prefix("INFO", getColorForLevel("info")) + msg);
     }
 
-    public void Debug(String msg) {
-        if(!Level.equals(String.valueOf(LoggerLevel.DEBUG)) && !Level.equals(String.valueOf(LoggerLevel.ALL))) return;
-        System.out.println(Prefix("DEBUG", getColorForLevel("debug")) + msg);
+    public void Video(String msg) {
+        if(!Level.equals(String.valueOf(LoggerLevel.VIDEO)) && !Level.equals(String.valueOf(LoggerLevel.ALL))) return;
+        System.out.println(Prefix("VIDEO", getColorForLevel("VIDEO")) + msg);
     }
 
     private String Prefix(String msg, String color) {
@@ -68,7 +68,7 @@ public class Logger {
         return switch(level.toLowerCase()) {
             case "warn" -> ConsoleColor.YELLOW;
             case "error" -> ConsoleColor.RED;
-            case "debug" -> ConsoleColor.BLUE;
+            case "video" -> ConsoleColor.BLUE;
             default -> ConsoleColor.RESET;
         };
     }
