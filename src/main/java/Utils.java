@@ -1,6 +1,10 @@
 import com.alibaba.fastjson2.JSONObject;
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.*;
 import java.net.*;
 import java.net.http.HttpConnectTimeoutException;
@@ -12,16 +16,62 @@ import java.rmi.UnexpectedException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.Objects;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Utils {
     private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private final Logger logger;
+    private final TrayIcon icon;
+    private String BvID = "";
 
     public Utils(Logger logger) {
-        this.logger = logger;
+        this(logger, null);
     }
+
+    public Utils(Logger logger, TrayIcon icon) {
+        this.logger = logger;
+        this.icon = icon;
+    }
+
+    public TimerTask regularTask = new TimerTask() {
+        String clipboardPast = null;
+
+        @Override
+        public void run() {
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            try {
+
+                Transferable contents = clipboard.getContents(null);
+                if(contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor) &&
+                        !Objects.equals(clipboardPast, contents.getTransferData(DataFlavor.stringFlavor))) {
+
+                    String copiedText = (String) contents.getTransferData(DataFlavor.stringFlavor);
+                    Transferable parserContent = null;
+
+                    try {
+                        parserContent = getVideoInfo(copiedText);
+                    } catch(IOException e) {
+                        logger.Error("发生错误,位于: " + e.getMessage());
+                    }
+
+                    if(parserContent != null) {
+                        clipboard.setContents(parserContent, null);
+                        if(icon != null) icon.displayMessage("BParser",
+                                String.format("解析并复制视频%s到剪切板", BvID),
+                                TrayIcon.MessageType.INFO);
+                    }
+                    contents = clipboard.getContents(null);
+                    clipboardPast = (String) contents.getTransferData(DataFlavor.stringFlavor);
+
+                }
+            } catch(IOException | UnsupportedFlavorException e) {
+                logger.Error("发生未知错误: " + e.getMessage());
+            }
+        }
+    };
 
     public String Search(String url, Pattern pattern) {
         Matcher matcher = pattern.matcher(url);
@@ -82,13 +132,11 @@ public class Utils {
         String fileName = url.getFile().substring(url.getFile().lastIndexOf('/') + 1);
         Path targetFilePath = Paths.get(bParserDirPath.toString(), fileName);
 
-        try (InputStream in = new BufferedInputStream(url.openStream());
-             OutputStream out = new FileOutputStream(targetFilePath.toFile())) {
+        try(InputStream in = new BufferedInputStream(url.openStream());
+            OutputStream out = new FileOutputStream(targetFilePath.toFile())) {
             byte[] buffer = new byte[1024];
             int bytesRead;
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
-            }
+            while((bytesRead = in.read(buffer)) != -1) out.write(buffer, 0, bytesRead);
             out.flush();
         }
         return targetFilePath.toUri().toString();
@@ -102,9 +150,7 @@ public class Utils {
             StringBuilder hexString = new StringBuilder();
             for(byte hashByte : hashBytes) {
                 String hex = Integer.toHexString(0xff & hashByte);
-                if(hex.length() == 1) {
-                    hexString.append('0');
-                }
+                if(hex.length() == 1) hexString.append('0');
                 hexString.append(hex);
             }
 
@@ -117,14 +163,15 @@ public class Utils {
 
     public Transferable getVideoInfo(String url) throws IOException {
         logger.Info("获取剪切板 | S:" + url.length() + " | " + strToSHA256(url));
-        String bvId = Search(url, Constant.StringPattern);
-        if(bvId == null) return null;
-        else logger.Video("解析到BvId: " + bvId);
+        BvID = Search(url, Constant.StringPattern);
+
+        if(BvID == null) return null;
+        else logger.Video("解析到BvId: " + BvID);
         long startTime = System.currentTimeMillis();
 
         JSONObject jsonObject;
         try {
-            jsonObject = request(Constant.ApiUrl, bvId);
+            jsonObject = request(Constant.ApiUrl, BvID);
         } catch(IOException e) {
             throw new IOException(e);
         }
@@ -140,12 +187,12 @@ public class Utils {
         if(PicUrl == null) logger.Warn("无法获取图片链接");
         else PicUrl = downloadFile(new URL(PicUrl));
 
-        String wholeInfo =  String.format(
+        String wholeInfo = String.format(
                 "%s<br>发布时间: %s<br>up: %s<br>评论数: %s<br>收藏数: %s<br>硬币数: %s<br>点赞数: %s<br>https://www.bilibili.com/video/%s ",
                 VideoTitle, format.format((long) (int) BVData.get("pubdate") * 1000),
                 JSONObject.parseObject(BVData.get("owner").toString()).get("name"),
                 VideoStat.get("reply"), VideoStat.get("favorite"), VideoStat.get("coin"),
-                VideoStat.get("like"), bvId
+                VideoStat.get("like"), BvID
         );
 
         try {
