@@ -1,7 +1,4 @@
-# bilibili视频自动解析
-> 喜报：本人成功了解到有一个东西叫做富文本并且成功实现图片复制  
-> 中考去了，暂停维护  
-
+# bilibili视频自动解析  
 效果如下：
 
 复制:  
@@ -22,6 +19,13 @@ up: 码农高天
 https://www.bilibili.com/video/BV1tJ4m1L7Z3
 ```
 
+## 使用  
+1. 复制浏览器标题的链接，或者使用分享按钮获取链接。  
+2. **进行解析的判断条件**:
+    - BV号后带着 **/?**(BV1tJ4m1P7NR/?)
+    - BV号为大写
+    - (其实没这么麻烦，按照第一点说的做就行了)
+
 ## 关于
 自己瞎做的  
 之前使用python写的,脑抽了用java写了一遍  
@@ -29,7 +33,7 @@ https://www.bilibili.com/video/BV1tJ4m1L7Z3
 
 ## BUG
 复制intellij的文字会报错，不影响运行  
-构建后的jar中文会乱码 解决方法：使用 `java -Dfile.encoding=UTF-8 -jar BParser.jar`运行  
+构建后的jar中文会乱码 解决方法：使用 `java -Dfile.encoding=UTF-8 -jar com.lemontree.BParser.jar`运行  
 如果在powershell使用这个命令报错，请使用cmd运行  
 
 ## 使用

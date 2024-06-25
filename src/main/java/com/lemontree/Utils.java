@@ -1,3 +1,5 @@
+package com.lemontree;
+
 import com.alibaba.fastjson2.JSONObject;
 
 import java.awt.*;
@@ -24,8 +26,9 @@ import java.util.regex.Pattern;
 public class Utils {
     private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private final Logger logger;
-    private final TrayIcon icon;
+    private TrayIcon icon;
     private String BvID = "";
+    private long usedTime;
 
     public Utils(Logger logger) {
         this(logger, null);
@@ -36,7 +39,7 @@ public class Utils {
         this.icon = icon;
     }
 
-    public TimerTask regularTask = new TimerTask() {
+    public Runnable regularTask = new TimerTask() {
         String clipboardPast = null;
 
         @Override
@@ -60,7 +63,7 @@ public class Utils {
                     if(parserContent != null) {
                         clipboard.setContents(parserContent, null);
                         if(icon != null) icon.displayMessage("BParser",
-                                String.format("解析并复制视频%s到剪切板", BvID),
+                                String.format("解析视频%s 用时%sms", BvID, usedTime),
                                 TrayIcon.MessageType.INFO);
                     }
                     contents = clipboard.getContents(null);
@@ -72,6 +75,10 @@ public class Utils {
             }
         }
     };
+
+    public void setIcon(TrayIcon icon) {
+        this.icon = icon;
+    }
 
     public String Search(String url, Pattern pattern) {
         Matcher matcher = pattern.matcher(url);
@@ -170,12 +177,7 @@ public class Utils {
         long startTime = System.currentTimeMillis();
 
         JSONObject jsonObject;
-        try {
-            jsonObject = request(Constant.ApiUrl, BvID);
-        } catch(IOException e) {
-            throw new IOException(e);
-        }
-
+        jsonObject = request(Constant.ApiUrl, BvID);
 
         if(jsonObject == null) throw new HttpConnectTimeoutException("2");
 
@@ -195,12 +197,13 @@ public class Utils {
                 VideoStat.get("like"), BvID
         );
 
+        usedTime = System.currentTimeMillis() - startTime;
         try {
             Transferable vidInfo = new FormatInfo(PicUrl, wholeInfo);
-            logger.Video("构建视频信息成功, 用时: " + (System.currentTimeMillis() - startTime) + "ms");
+            logger.Video("构建视频信息成功, 用时: " + usedTime + "ms");
             return vidInfo;
         } catch(Exception e) {
-            throw new UnexpectedException("构建视频信息失败, 用时: " + (System.currentTimeMillis() - startTime) + "ms", e);
+            throw new UnexpectedException("构建视频信息失败, 用时: " + usedTime + "ms", e);
         }
     }
 }
