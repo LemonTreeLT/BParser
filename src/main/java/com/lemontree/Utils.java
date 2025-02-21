@@ -1,5 +1,6 @@
 package com.lemontree;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 
 import java.awt.*;
@@ -25,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class Utils {
     private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -104,12 +106,7 @@ public class Utils {
     public String Search(String url, Pattern pattern) {
         Matcher matcher = pattern.matcher(url);
         if(!matcher.find()) return null;
-        else {
-            String bvid = matcher.group();
-            Matcher BvID = Constant.BvPattern.matcher(bvid);
-            if(!BvID.find()) return null;
-            return BvID.group();
-        }
+        else return matcher.group();
     }
 
     /**
@@ -194,28 +191,59 @@ public class Utils {
 
     public Transferable getVideoInfo(String url) throws IOException, InterruptedException {
         logger.Info("获取剪切板 | S:" + url.length() + " | " + strToSHA256(url));
-        BvID = Search(url, Constant.StringPattern);
+        String BvIDMayBeEmpty = Search(url, Constant.BvPattern);
+        BvID = BvIDMayBeEmpty == null? null: BvIDMayBeEmpty.substring(7, 19);
 
         if(BvID == null) return null;
         else logger.Video("解析到BvId: " + BvID);
         long startTime = System.currentTimeMillis();
 
-        JSONObject jsonObject;
-        jsonObject = request(Constant.ApiUrl, BvID);
+        JSONObject videoInfoJson = request(Constant.videoInfoApiUrl, BvID);
 
-        if(jsonObject == null) throw new HttpConnectTimeoutException("2");
+        if(videoInfoJson == null) throw new HttpConnectTimeoutException("2");
 
-        JSONObject BVData = JSONObject.parseObject(jsonObject.get("data").toString());
-        JSONObject VideoStat = JSONObject.parseObject(BVData.get("stat").toString());
+        JSONObject BVData = (JSONObject) videoInfoJson.get("data");
+        JSONObject VideoStat = (JSONObject) BVData.get("stat");
         String VideoTitle = (String) BVData.get("title");
         String PicUrl = BVData.get("pic").toString();
-        String wholeInfo = String.format(
-                "%s<br>发布时间: %s<br>up: %s<br>评论数: %s<br>收藏数: %s<br>硬币数: %s<br>点赞数: %s<br>https://www.bilibili.com/video/%s ",
-                VideoTitle, format.format((long) (int) BVData.get("pubdate") * 1000),
-                JSONObject.parseObject(BVData.get("owner").toString()).get("name"),
-                VideoStat.get("reply"), VideoStat.get("favorite"), VideoStat.get("coin"),
-                VideoStat.get("like"), BvID
-        );
+
+        // 对分集视频的判断
+        String perPageInt = Search(url, Constant.pagePattern);
+        int page = perPageInt == null? -1: perPageInt.charAt(perPageInt.length() - 1) == '&'?
+                Integer.parseInt(perPageInt.substring(3, perPageInt.length() - 1)):
+                Integer.parseInt(perPageInt.substring(3));
+
+        JSONObject videoPageInfoJson = request(Constant.pageInfoApiUrl, BvID);
+        JSONArray pageData = videoPageInfoJson.getJSONArray("data");
+
+        String wholeInfo;
+        if(pageData.size() <= 1) {
+            if(page != -1) logger.Warn("在链接中检查到分集，在api请求中没有检测到，按照没有分集处理");
+
+            wholeInfo = String.format(
+                    "%s<br>发布时间: %s<br>up: %s<br>评论数: %s<br>收藏数: %s<br>硬币数: %s<br>点赞数: %s<br>https://www.bilibili.com/video/%s ",
+                    VideoTitle, format.format((long) (int) BVData.get("pubdate") * 1000),
+                    JSONObject.parseObject(BVData.get("owner").toString()).get("name"),
+                    VideoStat.get("reply"), VideoStat.get("favorite"), VideoStat.get("coin"),
+                    VideoStat.get("like"), BvID
+            );
+        } else {
+            int indexOfPage = page == -1? 1: page;
+            String partName = IntStream.range(0, pageData.size())
+                    .mapToObj(pageData::getJSONObject)
+                    .filter(partedVideo -> partedVideo.getInteger("page") == indexOfPage)
+                    .findFirst().map(partedVideo -> partedVideo.getString("part"))
+                    .orElse("PART NAME NOT FOUND");
+
+            wholeInfo = String.format(
+                    "%s<br>分集: %s<br>发布时间: %s<br>up: %s<br>评论数: %s<br>收藏数: %s<br>硬币数: %s<br>点赞数: %s<br>https://www.bilibili.com/video/%s ",
+                    VideoTitle, partName, format.format((long) (int) BVData.get("pubdate") * 1000),
+                    JSONObject.parseObject(BVData.get("owner").toString()).get("name"),
+                    VideoStat.get("reply"), VideoStat.get("favorite"), VideoStat.get("coin"),
+                    VideoStat.get("like"), BvID + "?p=" + indexOfPage
+            );
+        }
+
 
         usedTime = System.currentTimeMillis() - startTime;
         try {

@@ -3,28 +3,28 @@
 
 复制:  
 ```
-https://www.bilibili.com/video/BV1sUPReYEa1/?
+https://www.bilibili.com/video/BV1EE411W7oa?vd_source=1ea648cf2e482b3e0f8610e072ad4062&p=11&spm_id_from=333.788.videopod.episodes
 ```
 
 粘贴:
 ```
 <<<<这是视频封面图片>>>>
-【流浪地球2】氦闪，但人类是二级文明
-发布时间: 2025-02-03 16:44:59
-up: 乐意Ajax
-评论数: 2205
-收藏数: 43665
-硬币数: 22871
-点赞数: 67494
-https://www.bilibili.com/video/BV1sUPReYEa1 
+【完结】0元搭建NAS从入门到入坑
+分集: 媒体管理:DDNS设置、Video Station搭建
+发布时间: 2020-03-06 12:32:43
+up: 天马Pegasus
+评论数: 2289
+收藏数: 63387
+硬币数: 52002
+点赞数: 50467
+https://www.bilibili.com/video/BV1EE411W7oa?p=11 
 ```
 
 ## 使用  
 1. 复制浏览器标题的链接，或者使用分享按钮获取链接。  
 2. **进行解析的判断条件**:
-    - BV号后带着 **/?**(BV1tJ4m1P7NR/?)
-    - BV号为大写
-    - (其实没这么麻烦，按照第一点说的做就行了)
+    - 正则表达式 `/video/(BV[0-9A-Za-z]{10})(?:[/?]|$)`
+
 
 ## 关于
 自己瞎做的，使用Java21  
@@ -32,7 +32,7 @@ https://www.bilibili.com/video/BV1sUPReYEa1
 exe打包部分的maven插件配置来自 [SoNovel](https://github.com/freeok/so-novel)
 
 ## BUG
-复制intellij的文字会报错，不影响运行  
+复制jetbrains的文字会报错，不影响运行  
 如果在powershell使用这个命令报错，请使用cmd运行  
 
 ## 使用

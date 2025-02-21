@@ -3,9 +3,10 @@ package com.lemontree;
 import java.util.regex.Pattern;
 
 public interface Constant {
-    String ApiUrl = "https://api.bilibili.com/x/web-interface/view?bvid=";
-    Pattern BvPattern = Pattern.compile("BV(\\w+)(?=/|$)");
-    Pattern StringPattern = Pattern.compile("/([A-Za-z0-9]+)/\\?");
+    String videoInfoApiUrl = "https://api.bilibili.com/x/web-interface/view?bvid=";
+    String pageInfoApiUrl = "https://api.bilibili.com/x/player/pagelist?bvid=";
+    Pattern BvPattern = Pattern.compile("/video/(BV[0-9A-Za-z]{10})(?:[/?]|$)");
+    Pattern pagePattern = Pattern.compile("[?&]p=(\\d+)(?:&|$)");
     String IntroduceBParser = """
                ___      ___                                         \s
               | _ )    | _ \\  __ _      _ _    ___     ___      _ _ \s
