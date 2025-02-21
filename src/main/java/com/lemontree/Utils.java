@@ -9,16 +9,19 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.*;
 import java.net.*;
+import java.net.http.HttpClient;
 import java.net.http.HttpConnectTimeoutException;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.rmi.UnexpectedException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.Objects;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,42 +42,60 @@ public class Utils {
         this.icon = icon;
     }
 
-    public Runnable regularTask = new TimerTask() {
-        String clipboardPast = null;
+    public class Monitor extends TimerTask {
+        private String lastCheckedString = null;
 
         @Override
         public void run() {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             try {
-
-                Transferable contents = clipboard.getContents(null);
-                if(contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor) &&
-                        !Objects.equals(clipboardPast, contents.getTransferData(DataFlavor.stringFlavor))) {
-
-                    String copiedText = (String) contents.getTransferData(DataFlavor.stringFlavor);
-                    Transferable parserContent = null;
-
-                    try {
-                        parserContent = getVideoInfo(copiedText);
-                    } catch(IOException e) {
-                        logger.Error("发生错误,位于: " + e.getMessage());
-                    }
-
+                String currentString = getClipBoardString(clipboard);
+                if(currentString != null && !currentString.equals(lastCheckedString)) {
+                    lastCheckedString = currentString;
+                    Transferable parserContent = parseVideoInfo(currentString);
                     if(parserContent != null) {
                         clipboard.setContents(parserContent, null);
-                        if(icon != null) icon.displayMessage("BParser",
-                                String.format("解析视频%s 用时%sms", BvID, usedTime),
-                                TrayIcon.MessageType.INFO);
+                        displayMessage();
+                        try {
+                            lastCheckedString = getClipBoardString(clipboard);
+                        } catch(Exception e) {
+                            // Keep lastCheckedString as the original string
+                        }
                     }
-                    contents = clipboard.getContents(null);
-                    clipboardPast = (String) contents.getTransferData(DataFlavor.stringFlavor);
-
                 }
-            } catch(IOException | UnsupportedFlavorException e) {
-                logger.Error("发生未知错误: " + e.getMessage());
+            } catch(Exception e) {
+                logger.Error("Error: " + e.getMessage());
             }
         }
-    };
+
+        private String getClipBoardString(Clipboard clipboard) throws IOException, UnsupportedFlavorException {
+            Transferable contents = clipboard.getContents(null);
+            if(contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                return (String) contents.getTransferData(DataFlavor.stringFlavor);
+            }
+            return null;
+        }
+
+        private Transferable parseVideoInfo(String text) {
+            try {
+                return getVideoInfo(text);
+            } catch(IOException e) {
+                logger.Error("Error parsing video info: " + e.getMessage());
+                return null;
+            } catch(InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private void displayMessage() {
+            if(icon == null) return;
+            icon.displayMessage("BParser",
+                    String.format("Parsed video %s in %s ms", BvID, usedTime),
+                    TrayIcon.MessageType.INFO);
+        }
+    }
+
+    public Runnable clipMonitor = new Monitor();
 
     public void setIcon(TrayIcon icon) {
         this.icon = icon;
@@ -97,56 +118,59 @@ public class Utils {
      * @param urlString Api链接
      * @param videoID   视频链接
      * @return 视频信息
-     * @throws IOException 文件系统错误
+     * @throws HttpConnectTimeoutException 错误
      */
-    public JSONObject request(String urlString, String videoID) throws IOException {
-        URL url = new URL(urlString + videoID);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestProperty("Charset", "UTF-8");
-        connection.setRequestMethod("GET");
+    public JSONObject request(String urlString, String videoID) throws IOException, InterruptedException {
+        URI uri = URI.create(urlString + videoID);
+        HttpRequest request = HttpRequest.newBuilder().uri(uri).GET().header("Accept-Charset", "UTF-8").build();
 
-        int responseCode = connection.getResponseCode();
-        if(responseCode == 200) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-
-            while((line = reader.readLine()) != null) response.append(line);
-            reader.close();
-
-            String apiData = response.toString();
-            connection.disconnect();
-            return JSONObject.parseObject(apiData);
+        HttpResponse<String> response;
+        try(HttpClient client = HttpClient.newHttpClient()) {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if(response.statusCode() == 200) {
+                String apiData = response.body();
+                return JSONObject.parseObject(apiData);
+            } else throw new HttpConnectTimeoutException("请求失败，状态码: " + response.statusCode());
         }
-        connection.disconnect();
-        throw new IOException("1");
     }
 
     /**
      * 这是为这个项目添加的介绍,不建议复制
      */
     public void introduce() {
+
         System.out.println(Constant.IntroduceBParser);
         System.out.println("                                     \u001B[3mby LemonTree\u001B[0m");
         System.out.println("================================================================");
     }
 
-    public String downloadFile(URL url) throws IOException {
+    public String downloadFile(String urlString) throws IOException {
+        URI uri = URI.create(urlString);
+        String fileName = uri.getPath().substring(uri.getPath().lastIndexOf('/') + 1);
         String temp = System.getProperty("java.io.tmpdir");
-        Path bParserDirPath = Paths.get(temp, "BParser");
-        Files.createDirectories(bParserDirPath);
+        Path targetFilePath = Paths.get(temp, "BParser", fileName);
 
-        String fileName = url.getFile().substring(url.getFile().lastIndexOf('/') + 1);
-        Path targetFilePath = Paths.get(bParserDirPath.toString(), fileName);
+        Files.createDirectories(targetFilePath.getParent());
 
-        try(InputStream in = new BufferedInputStream(url.openStream());
-            OutputStream out = new FileOutputStream(targetFilePath.toFile())) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while((bytesRead = in.read(buffer)) != -1) out.write(buffer, 0, bytesRead);
-            out.flush();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(uri)
+                .GET()
+                .build();
+
+        HttpResponse<InputStream> response;
+        try(HttpClient client = HttpClient.newHttpClient()) {
+            response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            if(response.statusCode() == 200) {
+                try(InputStream in = response.body()) {
+                    Files.copy(in, targetFilePath, StandardCopyOption.REPLACE_EXISTING);
+                }
+                return targetFilePath.toUri().toString();
+            } else {
+                throw new IOException("下载文件失败，状态码：" + response.statusCode());
+            }
+        } catch(InterruptedException e) {
+            throw new RuntimeException(e);
         }
-        return targetFilePath.toUri().toString();
     }
 
     public String strToSHA256(String input) {
@@ -168,7 +192,7 @@ public class Utils {
         }
     }
 
-    public Transferable getVideoInfo(String url) throws IOException {
+    public Transferable getVideoInfo(String url) throws IOException, InterruptedException {
         logger.Info("获取剪切板 | S:" + url.length() + " | " + strToSHA256(url));
         BvID = Search(url, Constant.StringPattern);
 
@@ -185,10 +209,6 @@ public class Utils {
         JSONObject VideoStat = JSONObject.parseObject(BVData.get("stat").toString());
         String VideoTitle = (String) BVData.get("title");
         String PicUrl = BVData.get("pic").toString();
-
-        if(PicUrl == null) logger.Warn("无法获取图片链接");
-        else PicUrl = downloadFile(new URL(PicUrl));
-
         String wholeInfo = String.format(
                 "%s<br>发布时间: %s<br>up: %s<br>评论数: %s<br>收藏数: %s<br>硬币数: %s<br>点赞数: %s<br>https://www.bilibili.com/video/%s ",
                 VideoTitle, format.format((long) (int) BVData.get("pubdate") * 1000),
@@ -199,7 +219,9 @@ public class Utils {
 
         usedTime = System.currentTimeMillis() - startTime;
         try {
-            Transferable vidInfo = new FormatInfo(PicUrl, wholeInfo);
+            if(PicUrl == null) logger.Warn("无法获取图片链接");
+            Transferable vidInfo = PicUrl == null?
+                    new FormatInfo(null, wholeInfo): new FormatInfo(downloadFile(PicUrl), wholeInfo);
             logger.Video("构建视频信息成功, 用时: " + usedTime + "ms");
             return vidInfo;
         } catch(Exception e) {

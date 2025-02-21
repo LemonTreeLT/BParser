@@ -2,25 +2,135 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>BParser</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.3</version>
     <name>com.lemontree.BParser</name>
     <description>bilibili链接解析器</description>
 
     <groupId>com.lemontree</groupId>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>21</java.version>
+        <!-- 相当于 source + target，这种写法要求 Maven 3.6.0+、JDK 9+。https://maven.apache.org/plugins/maven-compiler-plugin/examples/set-compiler-release.html -->
+        <!-- <maven.compiler.release>${java.version}</maven.compiler.release> -->
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
+
 
     <build>
         <plugins>
+            <!-- IDEA 的终端无法开发 jline 程序，因此在 wt 中运行 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <mainClass>com.lemontree.BParser</mainClass>
+                </configuration>
+            </plugin>
+
+            <!--
+                maven-jar-plugin 打包生成的 jar，只包含该工程下源码编译结果，不包含依赖内容
+                使用以下插件将所有外部库打包进 jar
+             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.lemontree.BParser</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <!-- 必须加，固定写法，表示将项目的编译结果和依赖库打包到一个 JAR 文件中 -->
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <finalName>app</finalName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                        <phase>package</phase> <!-- bind to the packaging phase -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <propertiesEncoding>UTF-8</propertiesEncoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- https://mvnrepository.com/artifact/com.akathist.maven.plugins.launch4j/launch4j-maven-plugin -->
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.5.2</version>
+                <executions>
+                    <execution>
+                        <id>launch4j-exe</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <!-- https://launch4j.sourceforge.net/docs.html#Configuration_file -->
+                        <configuration>
+                            <!-- 运行方式 gui|console|jniGui32|jniConsole32 -->
+                            <headerType>console</headerType>
+                            <outfile>target/BParser/BParser.exe</outfile>
+                            <jar>${project.build.directory}/app-jar-with-dependencies.jar</jar>
+                            <errTitle>SoNovel</errTitle>
+                            <!-- 崩溃时重新启动 -->
+                            <restartOnCrash>false</restartOnCrash>
+                            <classPath>
+                                <mainClass>com.lemontree.BParser</mainClass>
+                                <addDependencies>true</addDependencies>
+                                <preCp>anything</preCp>
+                            </classPath>
+                            <jre>
+                                <!-- jre 目录，动态配置：-DjrePath=runtime -->
+                                <path>${jrePath}</path>
+                                <minVersion>21</minVersion>
+                            </jre>
+                            <!-- Windows 资源管理器显示的可选版本信息 -->
+                            <versionInfo>
+                                <fileVersion>${project.version}.0</fileVersion>
+                                <txtFileVersion>${project.version}.0</txtFileVersion>
+                                <!-- 中文会乱码，待解决 -->
+                                <fileDescription>Parser link from copy board.</fileDescription>
+                                <copyright>Copyright (C) 2021-2025 LEMONTREE. All rights reserved.</copyright>
+                                <productVersion>${project.version}.0</productVersion>
+                                <txtProductVersion>${project.version}.0</txtProductVersion>
+                                <!-- 中文会乱码，待解决 -->
+                                <productName>BParser</productName>
+                                <companyName>github.com/lemontreelt</companyName>
+                                <internalName>BParser</internalName>
+                                <originalFilename>BParser.exe</originalFilename>
+
+                                <language>SIMPLIFIED_CHINESE</language>
+                            </versionInfo>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 
     <dependencies>

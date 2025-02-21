@@ -2,8 +2,6 @@ package com.lemontree;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,51 +14,33 @@ public class BParserWithTray {
     private static ScheduledFuture<?> scheduledFuture;
 
     public static void run(Logger logger) {
-        TrayIcon icon;
-        Utils utils = null;
         try {
             SystemTray tray = SystemTray.getSystemTray();
 
             //设置任务栏图标
             Image image = Toolkit.getDefaultToolkit().createImage(BParser.class.getResource("icon.png"));
-            utils = new Utils(logger);
-            icon = getTrayIcon(image, logger, utils);
+            Utils utils = new Utils(logger);
+            TrayIcon icon = getTrayIcon(image, logger, utils);
 
             utils.setIcon(icon);
             tray.add(icon);
 
             logger.Info("初始化任务栏成功");
 
+            utils.introduce();
+
+            scheduledFuture = Executors.newSingleThreadScheduledExecutor()
+                    .scheduleAtFixedRate(utils.clipMonitor, 0, 1, TimeUnit.SECONDS);
+
         } catch(AWTException e) {
             logger.Error("无法初始化任务栏图标");
             System.exit(-1);
         }
-        utils.introduce();
-
-        scheduledFuture = Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(utils.regularTask, 0, 1, TimeUnit.SECONDS);
     }
 
     private static @NotNull TrayIcon getTrayIcon(Image image, Logger logger, Utils utils) {
         TrayIcon icon = new TrayIcon(image, "BParser");
         icon.setImageAutoSize(true);
-        class MPopupMenu extends JPopupMenu {
-
-            public MPopupMenu() {
-                super();
-                setBorder(new EmptyBorder(10, 10, 10, 10));
-                setBackground(Color.WHITE);
-                setOpaque(true);
-            }
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                g.setColor(getBackground());
-                g.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-            }
-        }
-
 
         //添加菜单
         PopupMenu menu = new PopupMenu();
@@ -80,7 +60,7 @@ public class BParserWithTray {
 
         analyzeItem.addActionListener(event -> {
             logger.Info("用户手动进行解析");
-            utils.regularTask.run();
+            utils.clipMonitor.run();
         });
 
         class ToggleState implements ActionListener {
@@ -96,7 +76,7 @@ public class BParserWithTray {
                     toggleItem.setLabel("Stop");
                     analyzeItem.setEnabled(false);
                     scheduledFuture = Executors.newSingleThreadScheduledExecutor()
-                            .scheduleAtFixedRate(utils.regularTask, 0, 1, TimeUnit.SECONDS);
+                            .scheduleAtFixedRate(utils.clipMonitor, 0, 1, TimeUnit.SECONDS);
                     logger.Info("启动程序");
                     isRunning = true;
                 }

@@ -9,6 +9,6 @@ public class BParserOnTerminal {
         utils.introduce();
 
         Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(utils.regularTask, 0, 2, TimeUnit.SECONDS);
+                .scheduleAtFixedRate(utils.clipMonitor, 0, 2, TimeUnit.SECONDS);
     }
 }
